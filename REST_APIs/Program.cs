@@ -5,10 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-//builder.Services.AddControllers(); // Added for REST API Controllers
-builder.Services.AddControllers()
-    .AddNewtonsoftJson(); // Add this line to support JSON Patch
-
+builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 

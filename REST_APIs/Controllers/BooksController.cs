@@ -2,9 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using REST_APIs.Data;
 using REST_APIs.Models;
-using System.Runtime.Intrinsics.X86;
-using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 
 namespace REST_APIs.Controllers
 {
@@ -58,7 +55,6 @@ namespace REST_APIs.Controllers
             _context = context;
         }
 
-        // GET: api/Books
         [HttpGet]
         public async Task<ActionResult<List<Book>>> GetBooks()
         {
@@ -71,8 +67,7 @@ namespace REST_APIs.Controllers
             var book = await _context.Books.FindAsync(id);
             if (book == null)
                 return NotFound();
-
-            return Ok(book);  // return 200 with book data
+            return Ok(book);
         }
 
         [HttpPost]
@@ -80,17 +75,15 @@ namespace REST_APIs.Controllers
         {
             if (newBook == null)
                 return BadRequest();
-
             _context.Books.Add(newBook);
-            await _context.SaveChangesAsync(); // Save changes to the database
+            await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetBookById), new { id = newBook.Id }, newBook);
-            // return 201 with location header
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBook(int id, Book updatedBook)
-        {   // this async method returns an IActionResult (no specific type)  
+        {
             var book = await _context.Books.FindAsync(id);
             if (book == null)
                 return NotFound();
@@ -118,77 +111,5 @@ namespace REST_APIs.Controllers
             return NoContent();
         }
 
-        /*
-        When to use PATCH vs PUT
-        PUT → Replace the entire object (client must send all fields).
-        PATCH → Modify only specific fields.
-        */
-
-        // PATCH request (partial update)
-        // PATCH: api/Books/5
-        [HttpPatch("{id}")]
-        public async Task<IActionResult> PatchBook(int id, [FromBody] JsonPatchDocument<Book> patchDoc)
-        {
-            if (patchDoc == null)
-                return BadRequest("Patch document is null");
-
-            var book = await _context.Books.FindAsync(id);
-            if (book == null)
-                return NotFound();
-
-            // Apply patch to the book entity
-            patchDoc.ApplyTo(book, ModelState); // ModelState to capture validation errors
-
-            // Check if the model state is valid after applying the patch
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            // Validate the updated book
-            if (!TryValidateModel(book))
-                return BadRequest(ModelState);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-                return NoContent(); // 204 No Content - successful update
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!BookExists(id))
-                    return NotFound();
-                else
-                    throw;
-            }
-        }
-
-        // Helper method to check if book exists
-        private bool BookExists(int id)
-        {
-            return _context.Books.Any(e => e.Id == id);
-        }
-
     }
 }
-/*
-Task<T>
-Represents an asynchronous operation that returns a result of type T.
-Often used with async / await keywords.
-It represents an asynchronous operation that will complete in the future.
-
-public async Task<string> GetUserNameAsync()
-{
-    await Task.Delay(1000); // Simulate some async work
-    return "Mazhar";
-}
-
-🔹 Explanation
-Task<string> means this async method will eventually give back a string.
-
-Caller can await it:
-string name = await GetUserNameAsync();
-
-🔹 Difference
-Task → async method returns nothing (void-like).
-Task<T> → async method returns a value of type T.
-
-*/
